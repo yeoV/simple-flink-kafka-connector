@@ -11,10 +11,19 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotatio
 @AllArgsConstructor
 @Data
 public class SecondTopic {
-    @JsonProperty("name")
-    String name;
+    @JsonProperty("table")
+    String table;
 
-    @JsonProperty("address")
-    String address;
+    @JsonProperty("op_type")
+    String op_type;
+
+    @JsonProperty("op_ts")
+    String op_ts;
+
+    @JsonProperty("current_ts")
+    String current_ts;
+
+    @JsonProperty("after")
+    RightAfter after;
 
 }
