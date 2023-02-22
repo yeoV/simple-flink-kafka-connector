@@ -12,8 +12,8 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotatio
 @AllArgsConstructor
 @Data
 public class AddressTopic {
-    @JsonProperty("name")
-    String name;
+    @JsonProperty("owner")
+    String owner;
 
     @JsonProperty("address")
     AddressInfo address;

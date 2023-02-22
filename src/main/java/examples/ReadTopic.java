@@ -1,74 +1,81 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package examples;
 
-import examples.model.FirstTopic;
-import examples.model.Target;
-import examples.schema.FirstTopicDeserializationSchema;
-import examples.schema.TargetSerializationSchema;
+import examples.model.AddressTopic;
+import examples.model.GetPersonNameTopic;
+import examples.schema.AddressTopicDeserializationSchema;
+import examples.schema.GetPersonNameSerializationSchema;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.partitioner.FlinkFixedPartitioner;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 public class ReadTopic {
     public static void main(String[] args) throws Exception {
-        Properties prop = getProperties();
+        Properties prop = new Properties();
+        prop.setProperty("BOOTSTRAP_SERVERS", "localhost:9092");
+        prop.setProperty("SOURCE_TOPIC", "source-topic");
+        prop.setProperty("TARGET_TOPIC", "target-topic");
         kafkaToKafkaWithFlink(prop);
     }
-
-    /**
-     * resources/config.properties load
-     *
-     * @return Properties
-     */
-    private static Properties getProperties() {
-        Properties prop = new Properties();
-
-        try (InputStream propsInput =
-                     ReadTopic.class.getClassLoader().getResourceAsStream("config.properties")) {
-            prop.load(propsInput);
-            return prop;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return prop;
-    }
-
     public static void kafkaToKafkaWithFlink(Properties prop) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        // Flink Source
-        KafkaSource<FirstTopic> source = KafkaSource.<FirstTopic>builder()
+        /******************************************************************
+         * Source Topic
+         * ****************************************************************/
+        // Flink Consume Kafka AddressTopic
+        KafkaSource<AddressTopic> source = KafkaSource.<AddressTopic>builder()
                 .setBootstrapServers(prop.getProperty("BOOTSTRAP_SERVERS"))
-                .setTopics(prop.getProperty("FIRST_TOPIC"))
+                .setTopics(prop.getProperty("SOURCE_TOPIC"))
                 .setGroupId("my-group")
-                .setValueOnlyDeserializer(new FirstTopicDeserializationSchema())
+                .setValueOnlyDeserializer(new AddressTopicDeserializationSchema())
                 .setStartingOffsets(OffsetsInitializer.earliest())
                 .build();
 
-        DataStream<FirstTopic> sources = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        DataStream<AddressTopic> sources = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
 
         sources.print();
-        DataStream<Target> target = sources.flatMap((FlatMapFunction<FirstTopic, Target>) (in, out) -> out.collect(
-                        new Target(in.getTable())
-                )).returns(Target.class)
-                .keyBy(Target::getName);
+
+        /******************************************************************
+         * Target Topic
+         * ****************************************************************/
+
+        // Extract "Owner name"
+        DataStream<GetPersonNameTopic> target = sources.flatMap((FlatMapFunction<AddressTopic, GetPersonNameTopic>) (in, out) -> out.collect(
+                        new GetPersonNameTopic(in.getOwner())
+                )).returns(GetPersonNameTopic.class)
+                .keyBy(GetPersonNameTopic::getPersonName);
         target.print();
 
-        env.execute("Topic Read Write Test");
 
-        KafkaRecordSerializationSchema serializer = KafkaRecordSerializationSchema.<Target>builder()
+        KafkaRecordSerializationSchema serializer = KafkaRecordSerializationSchema.<GetPersonNameTopic>builder()
                 .setTopic(prop.getProperty("TARGET_TOPIC"))
-                .setValueSerializationSchema(new TargetSerializationSchema())
+                .setValueSerializationSchema(new GetPersonNameSerializationSchema())
                 .setPartitioner(new FlinkFixedPartitioner())
                 .build();
 
@@ -79,7 +86,7 @@ public class ReadTopic {
                 .build();
 
         target.sinkTo(sink);
-//        env.execute("Topic Read Write Test");
+        env.execute("Topic Read Write Test");
 
 
     }
