@@ -1,5 +1,6 @@
 package examples.model;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,20 +11,11 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotatio
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class SecondTopic {
-    @JsonProperty("table")
-    String table;
+public class AddressTopic {
+    @JsonProperty("name")
+    String name;
 
-    @JsonProperty("op_type")
-    String op_type;
-
-    @JsonProperty("op_ts")
-    String op_ts;
-
-    @JsonProperty("current_ts")
-    String current_ts;
-
-    @JsonProperty("after")
-    RightAfter after;
+    @JsonProperty("address")
+    AddressInfo address;
 
 }

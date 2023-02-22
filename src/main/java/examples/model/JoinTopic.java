@@ -11,13 +11,13 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotatio
 @AllArgsConstructor
 @Data
 public class JoinTopic {
-    @JsonProperty("name")
-    String name;
+    @JsonProperty("person_name")
+    String personName;
 
-    @JsonProperty("address")
-    String address;
+    @JsonProperty("address_name")
+    String addressName;
 
-    @JsonProperty("age")
+    @JsonProperty("person_age")
     Integer age;
 
 }
