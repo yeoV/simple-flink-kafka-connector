@@ -38,7 +38,7 @@ public class ReadTopic {
     public static void main(String[] args) throws Exception {
         Properties prop = new Properties();
         prop.setProperty("BOOTSTRAP_SERVERS", "localhost:9092");
-        prop.setProperty("SOURCE_TOPIC", "source-topic");
+        prop.setProperty("SOURCE_TOPIC", "address-topic");
         prop.setProperty("TARGET_TOPIC", "target-topic");
         kafkaToKafkaWithFlink(prop);
     }

@@ -1,0 +1,8 @@
+{
+  "owner" : "Kim",
+  "address" : {
+    "road_name" : "Sejong",
+    "country" : "Korea",
+    "city" : "Seoul"
+  }
+}
