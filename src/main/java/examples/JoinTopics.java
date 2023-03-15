@@ -70,7 +70,7 @@ public class JoinTopics {
 
 
         /******************************************************************
-         * Person Topic
+         * Joined Topic
          * ****************************************************************/
         Table result =
                 tableEnv.sqlQuery(
